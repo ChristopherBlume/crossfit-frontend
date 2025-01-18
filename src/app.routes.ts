@@ -4,6 +4,9 @@ import { Dashboard } from './app/pages/dashboard/dashboard';
 import { Documentation } from './app/pages/documentation/documentation';
 import { Landing } from './app/pages/landing/landing';
 import { Notfound } from './app/pages/notfound/notfound';
+import { DashboardOld } from './app/pages/_archiv/dashboard/dashboard';
+import { WorkoutListComponent } from './app/workout/workout-list/workout-list.component';
+import { ProfileComponent } from './app/profile/profile/profile.component';
 
 export const appRoutes: Routes = [
     {
@@ -11,6 +14,9 @@ export const appRoutes: Routes = [
         component: AppLayout,
         children: [
             { path: '', component: Dashboard },
+            { path: 'workouts', component: WorkoutListComponent },
+            { path: 'profile', component: ProfileComponent },
+            { path: 'old', component: DashboardOld },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }
@@ -18,6 +24,6 @@ export const appRoutes: Routes = [
     },
     { path: 'landing', component: Landing },
     { path: 'notfound', component: Notfound },
-    { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
+    { path: 'auth', loadChildren: () => import('./app/auth/auth.routes') },
     { path: '**', redirectTo: '/notfound' }
 ];
