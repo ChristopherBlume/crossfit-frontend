@@ -1,19 +1,18 @@
-import { Component, inject, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { DataService } from '../../core/services/data.service';
 import { ExerciseService } from '../services/exercise.service';
-import { Button, ButtonDirective } from 'primeng/button';
+import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 import { Table, TableModule } from 'primeng/table';
 import { Exercise } from '../../core/models/exercises/Exercise';
 import { ExerciseDetailComponent } from '../exercise-detail/exercise-detail.component';
-import { Toolbar } from 'primeng/toolbar';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 
 @Component({
     selector: 'app-exercise-list',
-    imports: [ButtonDirective, Ripple, TableModule, ExerciseDetailComponent, Button, Toolbar, IconField, InputIcon, InputText],
+    imports: [ButtonDirective, Ripple, TableModule, ExerciseDetailComponent, IconField, InputIcon, InputText],
     templateUrl: './exercise-list.component.html',
     styleUrl: './exercise-list.component.scss'
 })

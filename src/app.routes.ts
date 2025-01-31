@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { AppLayout } from './app/layout/component/app.layout';
 import { Dashboard } from './app/pages/dashboard/dashboard';
-import { Documentation } from './app/pages/documentation/documentation';
+import { Documentation } from './app/pages/_archiv/documentation/documentation';
 import { Landing } from './app/pages/landing/landing';
 import { Notfound } from './app/pages/_archiv/notfound/notfound';
 import { DashboardOld } from './app/pages/_archiv/dashboard/dashboard';

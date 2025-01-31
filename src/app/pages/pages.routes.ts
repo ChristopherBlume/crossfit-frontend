@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { Documentation } from './documentation/documentation';
-import { Crud } from './crud/crud';
-import { Empty } from './empty/empty';
+import { Documentation } from './_archiv/documentation/documentation';
+import { Crud } from './_archiv/crud/crud';
+import { Empty } from './_archiv/empty/empty';
 
 export default [
     { path: 'documentation', component: Documentation },
