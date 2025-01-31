@@ -50,6 +50,8 @@ export class AppLayout {
         this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
             this.hideMenu();
         });
+
+        this.hideMenu();
     }
 
     isOutsideClicked(event: MouseEvent) {
