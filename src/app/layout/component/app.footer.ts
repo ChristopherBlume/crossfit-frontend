@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 @Component({
     standalone: true,
     selector: 'app-footer',
-    imports: [RouterLink],
+    imports: [],
     template: ` <div class="layout-footer">
         Crossfit Tracker by
         <a href="https://github.com/ChristopherBlume" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">CB</a>
