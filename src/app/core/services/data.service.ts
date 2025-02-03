@@ -59,6 +59,8 @@ export class DataService {
                                 reps: exercise.reps,
                                 weight: exercise.weight,
                                 duration: exercise.duration,
+                                calories: exercise.calories,
+                                distance: exercise.distance,
                                 exercise_name: exercise.exercises.name, // Keep only the name from the "exercises" table
                             })) ?? [],
                         };

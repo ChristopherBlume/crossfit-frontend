@@ -36,25 +36,34 @@ export type Database = {
     Tables: {
       exercise_progress: {
         Row: {
-          best_reps: number | null
+          created_at: string | null
+          date: string
+          duration: number | null
           exercise_id: string
           id: string
-          max_weight: number | null
+          reps: number | null
           user_id: string
+          weight: number | null
         }
         Insert: {
-          best_reps?: number | null
+          created_at?: string | null
+          date: string
+          duration?: number | null
           exercise_id: string
           id?: string
-          max_weight?: number | null
+          reps?: number | null
           user_id: string
+          weight?: number | null
         }
         Update: {
-          best_reps?: number | null
+          created_at?: string | null
+          date?: string
+          duration?: number | null
           exercise_id?: string
           id?: string
-          max_weight?: number | null
+          reps?: number | null
           user_id?: string
+          weight?: number | null
         }
         Relationships: [
           {
@@ -89,6 +98,8 @@ export type Database = {
       }
       workout_exercises: {
         Row: {
+          calories: number | null
+          distance: number | null
           duration: number | null
           exercise_id: string
           id: string
@@ -97,6 +108,8 @@ export type Database = {
           workout_id: string
         }
         Insert: {
+          calories?: number | null
+          distance?: number | null
           duration?: number | null
           exercise_id: string
           id?: string
@@ -105,6 +118,8 @@ export type Database = {
           workout_id: string
         }
         Update: {
+          calories?: number | null
+          distance?: number | null
           duration?: number | null
           exercise_id?: string
           id?: string

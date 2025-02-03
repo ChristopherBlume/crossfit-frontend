@@ -5,4 +5,6 @@ export interface WorkoutExercise {
     reps: number | null;
     weight: number | null;
     duration: number | null;
+    calories: number | null;
+    distance: number | null;
 }

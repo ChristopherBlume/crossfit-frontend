@@ -75,7 +75,9 @@ export class WorkoutCreateComponent implements OnInit{
             exercise: [null, Validators.required],
             reps: [null],
             weight: [null],
-            duration: [null]
+            duration: [null],
+            calories: [null],
+            distance: [null]
         });
         this.exercisesArray.push(exerciseGroup);
     }
@@ -132,6 +134,8 @@ export class WorkoutCreateComponent implements OnInit{
                 reps: exercise.reps || null,
                 weight: exercise.weight || null,
                 duration: exercise.duration || null,
+                calories: exercise.calories || null,
+                distance: exercise.distance || null
             })),
         };
     }

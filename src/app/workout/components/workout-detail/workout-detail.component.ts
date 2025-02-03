@@ -122,6 +122,8 @@ export class WorkoutDetailComponent implements OnChanges {
             reps: exercise.reps !== null ? +exercise.reps : null,
             weight: exercise.weight !== null ? +exercise.weight : null,
             duration: exercise.duration !== null ? +exercise.duration : null,
+            calories: exercise.calories !== null ? +exercise.calories : null,
+            distance: exercise.distance !== null ? +exercise.distance : null
         }));
 
         return { workout, exercises };
@@ -158,7 +160,9 @@ export class WorkoutDetailComponent implements OnChanges {
                         exercise_name: [{ value: exercise.exercise_name, disabled: true }],
                         reps: [{ value: exercise.reps, disabled: true }],
                         weight: [{ value: exercise.weight, disabled: true }],
-                        duration: [{ value: exercise.duration, disabled: true }]
+                        duration: [{ value: exercise.duration, disabled: true }],
+                        calories: [{ value: exercise.calories, disabled: true }],
+                        distance: [{ value: exercise.distance, disabled: true }]
                     });
                     exercisesArray.push(exerciseGroup);
                 }
