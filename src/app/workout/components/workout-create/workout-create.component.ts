@@ -61,11 +61,9 @@ export class WorkoutCreateComponent implements OnInit{
 
     ngOnInit(): void {
         // Fetch all exercises for the dropdown
-/*        this.dataService.getExercises().subscribe((exercises) => {
+       this.dataService.getExercises().subscribe((exercises) => {
             this.exercises = exercises;
-        });*/
-
-        this.exercises = this.exerciseService.exercises();
+        });
     }
 
     get exercisesArray(): FormArray {
@@ -94,6 +92,7 @@ export class WorkoutCreateComponent implements OnInit{
     filterExercises(event: any): void {
         const query = event.query.toLowerCase();
         this.autoFilteredExercises = this.exercises.filter((exercise) => exercise.name.toLowerCase().includes(query));
+        console.log(this.autoFilteredExercises);
     }
 
     hideDialog(): void {
