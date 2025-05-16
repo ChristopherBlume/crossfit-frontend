@@ -32,7 +32,6 @@ import { MessageService } from 'primeng/api';
 export class WorkoutCreateComponent implements OnInit{
     @Input() visible = false;
     @Output() closeDialog = new EventEmitter<void>(); // Notify parent to close dialog
-    @Output() saveWorkout = new EventEmitter<any>(); // Emit the workout to save
 
     fb = inject(FormBuilder);
     dataService = inject(DataService);
@@ -101,16 +100,7 @@ export class WorkoutCreateComponent implements OnInit{
         console.log(this.autoFilteredExercises);
     }
 
-    hideDialog(): void {
-        this.closeDialog.emit(); // Notify parent to close the dialog
-        this.workoutForm.reset();
-    }
-
     save(): void {
-        if (this.workoutForm.invalid) {
-            this.workoutForm.markAllAsTouched();
-            return;
-        }
         const formattedWorkout = this.mapWorkoutToBackendFormat(this.workoutForm.value);
         console.log('formatted workout: ', formattedWorkout)
         this.dataService.addWorkout(

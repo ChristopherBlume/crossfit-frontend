@@ -209,40 +209,67 @@ export class DataService {
     // Exercise progress logic
 
     getProgressOverTime(exerciseId: string, category: string): Observable<{ metric: number | null; date: string }[]> {
-
         const user = this.authService.currentUser();
         if (!user) {
             throw new Error('User not authenticated');
         }
 
-        const query = this.supabase
-            .from('workout_exercises')
-            .select('weight, reps, duration, workout:workouts(workout_date)')
-            .eq('exercise_id', exerciseId)
-            .eq('workouts.user_id', user.id)
+        // Step 1: Fetch workout IDs of the current user
+        const workoutsQuery = this.supabase
+            .from('workouts')
+            .select('id, workout_date')
+            .eq('user_id', user.id);
 
-        return from(query).pipe(
-            map((response) => {
-                if (response.error) {
-                    throw new Error('Error fetching progress over time: ' + response.error.message);
+        return from(workoutsQuery).pipe(
+            switchMap((workoutsResponse) => {
+                if (workoutsResponse.error) {
+                    throw new Error('Error fetching user workouts: ' + workoutsResponse.error.message);
                 }
 
-                // Type assertion to ensure data is correctly typed
-                const data = response.data ?? [];
-                console.log('data: ', data);
+                const userWorkouts = workoutsResponse.data ?? [];
+                console.log(userWorkouts);
 
-                return data.map((item) => ({
-                    metric:
-                        category === 'Strength'
-                            ? item.weight
-                            : category === 'Bodyweight'
-                                ? item.reps
-                                : item.duration,
-                    date: item.workout.workout_date,
-                }));
+                if (userWorkouts.length === 0) {
+                    return from([[]]); // No workouts = no progress
+                }
+
+                const workoutIdMap = new Map<string, string>();
+                for (const w of userWorkouts) {
+                    workoutIdMap.set(w.id, w.workout_date);
+                }
+
+                const workoutIds = Array.from(workoutIdMap.keys());
+
+                // Step 2: Fetch workout_exercises where exercise matches and workout_id is in the user's list
+                const exercisesQuery = this.supabase
+                    .from('workout_exercises')
+                    .select('weight, reps, duration, workout_id')
+                    .eq('exercise_id', exerciseId)
+                    .in('workout_id', workoutIds);
+
+                return from(exercisesQuery).pipe(
+                    map((exerciseResponse) => {
+                        if (exerciseResponse.error) {
+                            throw new Error('Error fetching exercise progress: ' + exerciseResponse.error.message);
+                        }
+
+                        const rows = exerciseResponse.data ?? [];
+
+                        return rows.map((item) => ({
+                            metric:
+                                category === 'Strength'
+                                    ? item.weight
+                                    : category === 'Bodyweight'
+                                        ? item.reps
+                                        : item.duration,
+                            date: workoutIdMap.get(item.workout_id) ?? '', // map back to workout date
+                        }));
+                    })
+                );
             })
         );
     }
+
 
 
 
