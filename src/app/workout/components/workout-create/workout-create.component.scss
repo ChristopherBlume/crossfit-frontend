@@ -1,4 +1,4 @@
 :host ::ng-deep p-accordion-content {
-    max-height: 400px; /* Prevent overflow */
     overflow-y: auto; /* Enable scrolling if content exceeds max height */
 }
+

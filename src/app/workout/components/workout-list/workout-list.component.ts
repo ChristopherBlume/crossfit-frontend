@@ -16,6 +16,7 @@ import { DatePipe } from '@angular/common';
 import { WorkoutDetailComponent } from '../workout-detail/workout-detail.component';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -28,6 +29,7 @@ export class WorkoutListComponent implements OnInit {
     workoutService = inject(WorkoutService);
     dataService = inject(DataService);
     messageService = inject(MessageService);
+    router = inject(Router);
     createWorkoutDialog = false;
     detailWorkoutDialog = false;
     selectedWorkout: any = null; // Stores the workout to show in the dialog
@@ -65,7 +67,9 @@ export class WorkoutListComponent implements OnInit {
     }
 
     openNewWorkoutDialog(): void {
-        this.createWorkoutDialog = true;
+        // this.createWorkoutDialog = true;
+        this.router.navigateByUrl('/new-workout');
+
     }
 
     closeNewWorkoutDialog(): void {
