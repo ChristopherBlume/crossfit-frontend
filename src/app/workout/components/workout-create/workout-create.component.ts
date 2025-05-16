@@ -109,7 +109,7 @@ export class WorkoutCreateComponent implements OnInit{
         )
             .subscribe({
                 next: () => {
-                    this.workoutService.addWorkout({
+                    this.workoutService.addWorkoutToState({
                         workout: formattedWorkout.workout,
                         exercises: formattedWorkout.exercises
                     });

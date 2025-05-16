@@ -13,16 +13,8 @@ export class WorkoutService {
     dataService = inject(DataService);
 
     // Add a new workout to the state
-    addWorkout(newWorkout: { workout: Workout; exercises: WorkoutExercise[] }): void {
-        this.dataService.addWorkout(newWorkout.workout, newWorkout.exercises).subscribe(
-            () => {
-                // Only update the state when the backend call succeeds
-                this.workouts.update((workouts) => [...workouts, newWorkout]);
-            },
-            (error) => {
-                console.error('Error saving workout:', error);
-            }
-        );
+    addWorkoutToState(newWorkout: { workout: Workout; exercises: WorkoutExercise[] }): void {
+        this.workouts.update((workouts) => [...workouts, newWorkout]);
     }
 
     // Update a workout in the state
