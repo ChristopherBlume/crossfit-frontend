@@ -19,7 +19,9 @@ import { AutoComplete } from 'primeng/autocomplete';
 import { Textarea } from 'primeng/textarea';
 import { NgForOf } from '@angular/common';
 import { DataService } from '../../../core/services/data.service';
-import { ExerciseService } from '../../../exercise/services/exercise.service';
+import { WorkoutService } from '../../service/workout.service';
+import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-workout-create',
@@ -34,7 +36,9 @@ export class WorkoutCreateComponent implements OnInit{
 
     fb = inject(FormBuilder);
     dataService = inject(DataService);
-    exerciseService = inject(ExerciseService);
+    router = inject(Router);
+    workoutService = inject(WorkoutService);
+    messageService = inject(MessageService);
 
     workoutForm = this.fb.nonNullable.group({
         date: ['', Validators.required],
@@ -57,7 +61,7 @@ export class WorkoutCreateComponent implements OnInit{
         { label: 'PARTNER_WOD' },
         { label: 'GYM' },
     ];
-    exercises: Exercise[] = []; // Populate with actual data
+    exercises: Exercise[] = [];
 
     ngOnInit(): void {
         // Fetch all exercises for the dropdown
@@ -103,10 +107,30 @@ export class WorkoutCreateComponent implements OnInit{
     }
 
     save(): void {
+        if (this.workoutForm.invalid) {
+            this.workoutForm.markAllAsTouched();
+            return;
+        }
         const formattedWorkout = this.mapWorkoutToBackendFormat(this.workoutForm.value);
         console.log('formatted workout: ', formattedWorkout)
-        this.saveWorkout.emit(formattedWorkout); // Emit the formatted workout to the parent
-        this.hideDialog(); // Close the dialog after saving
+        this.dataService.addWorkout(
+            formattedWorkout.workout,
+            formattedWorkout.exercises
+        )
+            .subscribe({
+                next: () => {
+                    this.workoutService.addWorkout({
+                        workout: formattedWorkout.workout,
+                        exercises: formattedWorkout.exercises
+                    });
+                    this.messageService.add({ severity: 'success', summary: 'Erfolg', detail: 'Workout gespeichert' });
+                    this.router.navigateByUrl('/workouts');
+                },
+                error: (err) => {
+                    console.error('Fehler beim Speichern des Workouts', err);
+                    this.messageService.add({ severity: 'error', summary: 'Fehler', detail: 'Workout konnte nicht gespeichert werden' });
+                }
+            });
     }
 
     private mapWorkoutToBackendFormat(formData: any): any {
@@ -118,7 +142,10 @@ export class WorkoutCreateComponent implements OnInit{
 
         const formatDate = (date: Date): string => {
             if (!date) return '';
-            return date.toISOString().split('T')[0]; // Extract 'YYYY-MM-DD'
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         };
 
         return {

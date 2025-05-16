@@ -30,9 +30,8 @@ export class WorkoutListComponent implements OnInit {
     dataService = inject(DataService);
     messageService = inject(MessageService);
     router = inject(Router);
-    createWorkoutDialog = false;
     detailWorkoutDialog = false;
-    selectedWorkout: any = null; // Stores the workout to show in the dialog
+    selectedWorkout: any = null;
 
     ngOnInit() {
         // Fetch workouts with their exercises
@@ -47,7 +46,7 @@ export class WorkoutListComponent implements OnInit {
     }
 
     deleteWorkout(workoutId: string): void {
-        if (confirm('Are you sure you want to delete this workout?')) {
+        if (confirm('Willst du das Workout wirklich löschen?')) {
             this.dataService.removeWorkout(workoutId).subscribe(
                 () => {
                     console.log(`Workout with ID ${workoutId} successfully deleted.`);
@@ -67,13 +66,8 @@ export class WorkoutListComponent implements OnInit {
     }
 
     openNewWorkoutDialog(): void {
-        // this.createWorkoutDialog = true;
         this.router.navigateByUrl('/new-workout');
 
-    }
-
-    closeNewWorkoutDialog(): void {
-        this.createWorkoutDialog = false;
     }
 
     openWorkoutDetailsDialog(workout: any) {
@@ -84,10 +78,5 @@ export class WorkoutListComponent implements OnInit {
 
     closeWorkoutDetailDialog() {
         this.detailWorkoutDialog = false;
-    }
-
-    saveWorkout(workout: { workout: any; exercises: any[] }): void {
-        this.workoutService.addWorkout(workout); // Add workout to the state
-        this.createWorkoutDialog = false;
     }
 }
