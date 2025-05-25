@@ -10,6 +10,7 @@ import { ProfileComponent } from './app/profile/profile/profile.component';
 import { authGuard } from './app/auth/service/auth.guard';
 import { ExerciseListComponent } from './app/exercise/exercise-list/exercise-list.component';
 import { WorkoutCreateComponent } from './app/workout/components/workout-create/workout-create.component';
+import { WorkoutDetailComponent } from './app/workout/components/workout-detail/workout-detail.component';
 
 export const appRoutes: Routes = [
     {
@@ -18,7 +19,8 @@ export const appRoutes: Routes = [
         children: [
             { path: '', component: Dashboard, canActivate: [authGuard] },
             { path: 'workouts', component: WorkoutListComponent, canActivate: [authGuard]},
-            { path: 'new-workout', component: WorkoutCreateComponent, canActivate: [authGuard]},
+            { path: 'workouts/new', component: WorkoutCreateComponent, canActivate: [authGuard] }, // for creating
+            { path: 'workouts/:id', component: WorkoutCreateComponent, canActivate: [authGuard] },
             { path: 'exercises', component: ExerciseListComponent, canActivate: [authGuard]},
             { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
             { path: 'old', component: DashboardOld },

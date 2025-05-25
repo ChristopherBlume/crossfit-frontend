@@ -3,7 +3,7 @@
     <ng-template #start>
     </ng-template>
     <ng-template #center>
-        <p-button label="Neues Workout" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNewWorkoutDialog()" />
+        <p-button label="Neues Workout" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNewWorkoutForm()" />
     </ng-template>
     <ng-template #end>
     </ng-template>
@@ -20,19 +20,12 @@
     </ng-template>
     <ng-template #body let-item>
         <tr>
-            <td style="width: 35%; min-width: 7rem;">{{ item.workout.workout_date | date: 'dd.MM.yyyy' }}</td>
-            <td style="width: 35%; min-width: 8rem;">{{ item.workout.workout_type }}</td>
-            <td style="width: 35%; min-width: 8rem;">{{ getExerciseNames(item.exercises) }}</td>
+            <td style="width: 35%; min-width: 7rem;" (click)="openWorkoutDetailsDialog(item)">{{ item.workout.workout_date | date: 'dd.MM.yyyy' }} </td>
+            <td style="width: 35%; min-width: 8rem;" (click)="openWorkoutDetailsDialog(item)">{{ item.workout.workout_type }}</td>
+            <td style="width: 35%; min-width: 8rem;" (click)="openWorkoutDetailsDialog(item)">{{ item.exercises | exerciseNames }}</td>
             <td style="width: 15%;">
-                <button pButton pRipple type="button" icon="pi pi-search" class="p-button p-component p-button-text p-button-icon-only" (click)="openWorkoutDetailsDialog(item)"></button>
                 <button pButton pRipple severity="danger" type="button" icon="pi pi-trash" class="p-button p-component p-button-text p-button-icon-only" (click)="deleteWorkout(item.workout.id)"></button>
             </td>
         </tr>
     </ng-template>
 </p-table>
-
-<app-workout-detail
-    [visible]="detailWorkoutDialog"
-    [workout]="selectedWorkout"
-    (closeDialog)="closeWorkoutDetailDialog()">
-</app-workout-detail>

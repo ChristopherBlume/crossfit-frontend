@@ -1,11 +1,12 @@
-    <div class="card flex flex-col h-full max-h-full w-full">
+<p-toast></p-toast>
+<div class="card flex flex-col h-full max-h-full w-full">
         <div class="flex flex-col flex-grow justify-between form overflow-auto">
             <form [formGroup]="workoutForm" class="flex-grow overflow-auto">
                     <div class="flex flex-col gap-6">
                         <!-- Date -->
                         <div>
                             <div class="block font-bold mb-2">Datum</div>
-                            <p-datepicker formControlName="date" [showIcon]="true" [showButtonBar]="true" fluid></p-datepicker>
+                            <p-datepicker dateFormat="dd.mm.yy" formControlName="date" [showIcon]="true" [showButtonBar]="true" fluid></p-datepicker>
                         </div>
 
                         <!-- Workout Type -->
@@ -43,79 +44,89 @@
                         <div>
                             <div class="flex justify-between items-center">
                                 <label class="block font-bold mb-3">Übungen</label>
-                                <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="primary" (click)="addExerciseGroup()"></p-button>
+                                @if (!isReadOnly) {
+                                    <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="primary" (click)="addExerciseGroup()"></p-button>
+                                }
                             </div>
 
-                            <div class="mb-10" formArrayName="exercises">
-                                <p-accordion id="exercises">
-                                    <p-accordion-panel
-                                        *ngFor="let exercise of exercisesArray.controls; let i = index"
-                                        [formGroupName]="i"
-                                        class=""
-                                        [value]="i"
-                                    >
-                                        <p-accordion-header>
-                                            {{ exercise.get('exercise')?.value?.name || 'Übungsname' }}
-                                        </p-accordion-header>
-                                        <p-accordion-content>
-                                            <!-- Exercise Autocomplete -->
-                                            <div class="block font-bold mb-2">Übung</div>
-                                            <p-autocomplete
-                                                fluid
-                                                formControlName="exercise"
-                                                [suggestions]="autoFilteredExercises"
-                                                optionLabel="name"
-                                                placeholder="Wähle Übung"
-                                                dropdown
-                                                appendTo="body"
-                                                (completeMethod)="filterExercises($event)"
-                                            ></p-autocomplete>
+                            <div class="flex flex-col gap-4 mb-10" formArrayName="exercises">
+                                <div
+                                    *ngFor="let exercise of exercisesArray.controls; let i = index"
+                                    [formGroupName]="i"
+                                    class="border border-gray-200 rounded-lg p-4 shadow-sm"
+                                >
+                                    <div class="flex justify-between items-center mb-3">
+                                        <div class="text-lg font-semibold">
+                                            {{ exercise.get('exercise')?.value?.name || exercise.value?.exercise_name || 'Übung auswählen' }}
+                                        </div>
+                                        @if (!isReadOnly) {
+                                            <p-button
+                                                icon="pi pi-trash"
+                                                [rounded]="true"
+                                                [text]="true"
+                                                severity="danger"
+                                                (click)="removeExerciseGroup(i)"
+                                            ></p-button>
+                                        }
+                                    </div>
 
-                                            <!-- Reps -->
-                                            <div class="flex flex-col mt-3">
-                                                @if (exercise.get('exercise')?.value) {
-                                                    @if (exercise.get('exercise')?.value?.category === 'Strength' || exercise.get('exercise')?.value?.category === 'Bodyweight') {
-                                                        <div class="mb-2">
-                                                            <div class="block font-bold mb-2">Wiederholungen</div>
-                                                            <p-inputNumber fluid formControlName="reps" placeholder="Reps"></p-inputNumber>
-                                                        </div>
-                                                        <div class="mb-2">
-                                                            <div class="block font-bold mb-2">Gewicht</div>
-                                                            <p-inputNumber fluid formControlName="weight" placeholder="Weight"></p-inputNumber>
-                                                        </div>
-                                                    }
-                                                    @if (exercise.get('exercise')?.value?.category === 'Cardio') {
-                                                        <div class="mb-2">
-                                                            <div class="block font-bold mb-2">Zeit (Minuten)</div>
-                                                            <input pInputText fluid formControlName="duration" placeholder="Minuten">
-                                                        </div>
-                                                        <div class="mb-2">
-                                                            <div class="block font-bold mb-2">Kalorien</div>
-                                                            <p-inputNumber fluid formControlName="calories" placeholder="Kalorien"></p-inputNumber>
-                                                        </div>
-                                                        <div class="mb-2">
-                                                            <div class="block font-bold mb-2">Distanz (Meter)</div>
-                                                            <p-inputNumber fluid formControlName="distance" placeholder="Distanz"></p-inputNumber>
-                                                        </div>
-                                                    }
-                                                    <div class="flex justify-center">
-                                                        <p-button
-                                                            icon="pi pi-trash"
-                                                            [rounded]="true"
-                                                            [text]="true"
-                                                            severity="danger"
-                                                            (click)="removeExerciseGroup(i)"
-                                                        ></p-button>
-                                                    </div>
-                                                }
+                                    <p-autocomplete
+                                        fluid
+                                        formControlName="exercise"
+                                        [suggestions]="autoFilteredExercises"
+                                        optionLabel="name"
+                                        placeholder="{{ exercise.get('exercise')?.value?.name || exercise.value?.exercise_name || 'Übung auswählen' }}"
+                                        dropdown
+                                        appendTo="body"
+                                        (completeMethod)="filterExercises($event)"
+                                    ></p-autocomplete>
+                                    <!-- Exercise Details by Category -->
+                                    <div class="mt-4">
+                                        <!-- Strength / Bodyweight -->
+                                        <ng-container *ngIf="['Strength', 'Bodyweight'].includes(exercise.get('exercise')?.value?.category)">
+                                            <div class="grid grid-cols-2 gap-1">
+                                                <div *ngIf="isReadOnly ? exercise.value.reps !== null : true">
+                                                    <label for="reps" class="block font-bold mb-1">Wiederholungen</label>
+                                                    <p-inputNumber id="reps" fluid formControlName="reps" placeholder="Wiederholungen" />
+                                                </div>
+                                                <div *ngIf="isReadOnly ? exercise.value.weight !== null : true">
+                                                    <label for="weight" class="block font-bold mb-1">Gewicht</label>
+                                                    <p-inputNumber id="weight" fluid formControlName="weight" placeholder="Gewicht" />
+                                                </div>
                                             </div>
-                                        </p-accordion-content>
-                                    </p-accordion-panel>
-                                </p-accordion>
+                                        </ng-container>
+                                        <!-- Cardio -->
+                                        <ng-container *ngIf="exercise.get('exercise')?.value?.category === 'Cardio'">
+                                            <div class="grid grid-cols-2 gap-1">
+                                                <div *ngIf="isReadOnly ? exercise.value.duration !== null : true">
+                                                    <label for="duration" class="block font-bold mb-1">Dauer</label>
+                                                    <input fluid pInputText id="duration" formControlName="duration" placeholder="Dauer (Minuten)" />
+                                                </div>
+                                                <div *ngIf="isReadOnly ? exercise.value.reps !== null : true">
+                                                    <label for="reps-cardio" class="block font-bold mb-1">Wiederholungen</label>
+                                                    <p-inputNumber id="reps-cardio" fluid formControlName="reps" placeholder="Wiederholungen" />
+                                                </div>
+                                                <div *ngIf="isReadOnly ? exercise.value.calories !== null : true">
+                                                    <label for="calories" class="block font-bold mb-1">Kalorien</label>
+                                                    <p-inputNumber id="calories" fluid formControlName="calories" placeholder="Kalorien" />
+                                                </div>
+                                                <div *ngIf="isReadOnly ? exercise.value.distance !== null : true">
+                                                    <label for="distance" class="block font-bold mb-1">Distanz</label>
+                                                    <p-inputNumber id="distance" fluid formControlName="distance" placeholder="Distanz (Meter)" />
+                                                </div>
+                                            </div>
+                                        </ng-container>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
             </form>
-            <p-button fluid label="Speichern" icon="pi pi-check" (click)="save()" />
+            <p-button
+                fluid
+                [label]="isReadOnly ? 'Bearbeiten' : 'Speichern'"
+                [icon]="isReadOnly ? 'pi pi-pencil' : 'pi pi-check'"
+                (click)="onActionButtonClick()"
+            />
         </div>
     </div>

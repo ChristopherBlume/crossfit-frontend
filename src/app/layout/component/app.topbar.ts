@@ -49,15 +49,11 @@ import { Tooltip } from 'primeng/tooltip';
                     @if (authService.currentUser()) {
                         <button type="button" class="layout-topbar-action" pTooltip="Meine Workouts" showDelay="300" hideDelay="300" tooltipPosition="bottom" routerLink="/workouts">
                             <i class="fas fa-scroll"></i>
-                            <span>Meine Workouts</span>
+                            <span>Workout Übersicht</span>
                         </button>
                         <button type="button" class="layout-topbar-action" pTooltip="Zu den Übungen" showDelay="300" hideDelay="300" tooltipPosition="bottom" routerLink="/exercises">
                             <i class="fas fa-dumbbell"></i>
-                            <span>Übungen</span>
-                        </button>
-                        <button type="button" class="layout-topbar-action" pTooltip="Mein Profil" showDelay="300" hideDelay="300" tooltipPosition="bottom">
-                            <i class="pi pi-user"></i>
-                            <span>Profil</span>
+                            <span>Übungen Übersicht</span>
                         </button>
                         <button type="button" class="layout-topbar-action" (click)="logout()" routerLink="/auth/login" pTooltip="Ausloggen" showDelay="300" hideDelay="300" tooltipPosition="bottom">
                             <i class="pi pi-sign-out"></i>

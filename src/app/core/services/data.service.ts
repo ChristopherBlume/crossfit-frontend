@@ -10,7 +10,7 @@ import { WorkoutExercise } from '../models/workout/WorkoutExercise';
 import { AuthService } from '../../auth/service/auth.service';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class DataService {
     supabase = createClient<Database>(environment.supabaseUrl, environment.supabaseKey);
@@ -31,10 +31,7 @@ export class DataService {
             throw new Error('User not authenticated');
         }
 
-        const workoutsPromise = this.supabase
-            .from('workouts')
-            .select('*')
-            .eq('user_id', user.id); // Fetch workouts for the logged-in user
+        const workoutsPromise = this.supabase.from('workouts').select('*').eq('user_id', user.id);
 
         return from(workoutsPromise).pipe(
             switchMap(async (workoutsResponse) => {
@@ -43,12 +40,16 @@ export class DataService {
                 }
 
                 const workouts = workoutsResponse.data ?? [];
-                const enrichedWorkouts = await Promise.all(
+
+                return await Promise.all(
                     workouts.map(async (workout) => {
                         const exercisesResponse = await this.supabase
                             .from('workout_exercises')
-                            .select(`*, exercises(name)`) // Join with "exercises" to get the name
+                            .select('id, workout_id, exercise_id, reps, weight, duration, calories, distance, exercises(name)')
                             .eq('workout_id', workout.id);
+                        if (exercisesResponse.error) {
+                            console.error('Error fetching exercises for workout:', exercisesResponse.error);
+                        }
 
                         return {
                             workout: workout as Workout,
@@ -66,25 +67,15 @@ export class DataService {
                         };
                     })
                 );
-                return enrichedWorkouts;
-            })
+            }),
+            switchMap((result) => from([result]))
         );
     }
 
-
-    getWorkoutExercises(id: string): Observable<WorkoutExercise[]> {
-        const promise = this.supabase.from('workout_exercises').select('*').eq('workout_id', id);
-        return from(promise).pipe(
-            map((response) => {
-                return response.data ?? [];
-            })
-        )
-    }
-
     // Get a single workout with its associated exercises
-    getWorkoutWithExercises(workoutId: string): Observable<{ workout: Workout; exercises: WorkoutExercise[] } | null> {
+    getWorkoutWithExercises(workoutId: string): Observable<{ workout: Workout; exercises: (WorkoutExercise & { exercise_name: string })[] } | null> {
         const workoutPromise = this.supabase.from('workouts').select('*').eq('id', workoutId).single();
-        const exercisesPromise = this.supabase.from('workout_exercises').select('*').eq('workout_id', workoutId);
+        const exercisesPromise = this.supabase.from('workout_exercises').select('id, workout_id, exercise_id, reps, weight, duration, calories, distance, exercises(name)').eq('workout_id', workoutId);
 
         return from(
             Promise.all([workoutPromise, exercisesPromise]).then(([workoutResponse, exercisesResponse]) => {
@@ -94,42 +85,23 @@ export class DataService {
                 }
                 return {
                     workout: workoutResponse.data,
-                    exercises: exercisesResponse.data ?? [],
+                    exercises:
+                        exercisesResponse.data?.map((ex) => ({
+                            id: ex.id,
+                            workout_id: ex.workout_id,
+                            exercise_id: ex.exercise_id,
+                            reps: ex.reps,
+                            weight: ex.weight,
+                            duration: ex.duration,
+                            calories: ex.calories,
+                            distance: ex.distance,
+                            exercise_name: ex.exercises.name
+                        })) ?? []
                 };
             })
         );
     }
 
-    // Get workouts along with exercises for all workouts
-    getAllWorkoutsWithExercises(): Observable<{ workout: Workout; exercises: WorkoutExercise[] }[]> {
-        const promise = this.supabase.from('workouts').select('*');
-
-        return from(promise).pipe(
-            map((response) => {
-                if (response.error) {
-                    console.error('Error fetching workouts:', response.error);
-                    return [];
-                }
-
-                const workouts = response.data ?? [];
-                return Promise.all(
-                    workouts.map(async (workout) => {
-                        const exercisesResponse = await this.supabase
-                            .from('workout_exercises')
-                            .select('*')
-                            .eq('workout_id', workout.id);
-
-                        return {
-                            workout: workout as Workout,
-                            exercises: exercisesResponse.data as WorkoutExercise[],
-                        };
-                    })
-                );
-            }),
-            // Use `switchMap` to flatten the `Promise` returned by `Promise.all`
-            switchMap((promiseResult) => from(promiseResult))
-        );
-    }
 
     addWorkout(workout: Workout, exercises: WorkoutExercise[]): Observable<void> {
         const user = this.authService.currentUser();
@@ -154,10 +126,12 @@ export class DataService {
 
                 // Insert exercises for the workout
                 await this.supabase.from('workout_exercises').insert(
-                    exercises.map((exercise) => ({
-                        ...exercise,
-                        workout_id: workoutId, // Use the retrieved workout ID
-                    }))
+                    exercises
+                        .filter((e) => !e.id)
+                        .map(({ id, ...exercise }) => ({
+                            ...exercise,
+                            workout_id: workoutId
+                        }))
                 );
             });
 
@@ -165,23 +139,35 @@ export class DataService {
     }
 
     updateWorkout(workout: Workout, exercises: WorkoutExercise[]): Observable<void> {
-        const workoutUpdatePromise = this.supabase
-            .from('workouts')
-            .update(workout)
-            .eq('id', workout.id);
+        const workoutUpdatePromise = this.supabase.from('workouts').update(workout).eq('id', workout.id);
 
         const exercisesUpdatePromises = exercises.map((exercise) => {
-            if (!exercise.id) {
-                return Promise.reject(new Error('Exercise ID is missing.'));
+            if (exercise.id) {
+                // Update existing
+                return this.supabase
+                    .from('workout_exercises')
+                    .update({
+                        reps: exercise.reps,
+                        weight: exercise.weight,
+                        duration: exercise.duration,
+                        calories: exercise.calories,
+                        distance: exercise.distance
+                    })
+                    .eq('id', exercise.id);
+            } else {
+                // Insert new
+                return this.supabase
+                    .from('workout_exercises')
+                    .insert({
+                        workout_id: workout.id,
+                        exercise_id: exercise.exercise_id,
+                        reps: exercise.reps,
+                        weight: exercise.weight,
+                        duration: exercise.duration,
+                        calories: exercise.calories,
+                        distance: exercise.distance
+                    });
             }
-            return this.supabase
-                .from('workout_exercises')
-                .update({
-                    reps: exercise.reps,
-                    weight: exercise.weight,
-                    duration: exercise.duration,
-                })
-                .eq('id', exercise.id);
         });
 
         return from(
@@ -215,10 +201,7 @@ export class DataService {
         }
 
         // Step 1: Fetch workout IDs of the current user
-        const workoutsQuery = this.supabase
-            .from('workouts')
-            .select('id, workout_date')
-            .eq('user_id', user.id);
+        const workoutsQuery = this.supabase.from('workouts').select('id, workout_date, workout_type').eq('user_id', user.id);
 
         return from(workoutsQuery).pipe(
             switchMap((workoutsResponse) => {
@@ -269,9 +252,4 @@ export class DataService {
             })
         );
     }
-
-
-
-
-
 }

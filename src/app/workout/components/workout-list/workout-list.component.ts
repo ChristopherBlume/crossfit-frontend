@@ -17,11 +17,12 @@ import { WorkoutDetailComponent } from '../workout-detail/workout-detail.compone
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { Router } from '@angular/router';
+import { ExerciseNamesPipe } from '../../../core/pipes/exercise-names.pipe';
 
 
 @Component({
     selector: 'app-workout-list',
-    imports: [InputTextModule, Toolbar, Button, ReactiveFormsModule, FormsModule, WorkoutCreateComponent, TableModule, ButtonDirective, Ripple, DatePipe, WorkoutDetailComponent, Toast],
+    imports: [InputTextModule, Toolbar, Button, ReactiveFormsModule, FormsModule, TableModule, ButtonDirective, Ripple, DatePipe, Toast, ExerciseNamesPipe],
     templateUrl: './workout-list.component.html',
     styleUrl: './workout-list.component.scss',
 })
@@ -30,8 +31,6 @@ export class WorkoutListComponent implements OnInit {
     dataService = inject(DataService);
     messageService = inject(MessageService);
     router = inject(Router);
-    detailWorkoutDialog = false;
-    selectedWorkout: any = null;
 
     ngOnInit() {
         // Fetch workouts with their exercises
@@ -61,22 +60,13 @@ export class WorkoutListComponent implements OnInit {
         }
     }
 
-    getExerciseNames(exercises: { exercise_name: string }[]): string {
-        return exercises.map((e) => e.exercise_name).join(', ');
-    }
-
-    openNewWorkoutDialog(): void {
-        this.router.navigateByUrl('/new-workout');
+    openNewWorkoutForm(): void {
+        this.router.navigateByUrl('/workouts/new');
 
     }
 
     openWorkoutDetailsDialog(workout: any) {
-        console.log('Opening workout details for:', workout); // Debug
-        this.selectedWorkout = workout; // Set the selected workout
-        this.detailWorkoutDialog = true;
-    }
-
-    closeWorkoutDetailDialog() {
-        this.detailWorkoutDialog = false;
+        console.log('Workout clicked in list: ', workout);
+        this.router.navigateByUrl(`/workouts/${workout.workout.id}`);
     }
 }

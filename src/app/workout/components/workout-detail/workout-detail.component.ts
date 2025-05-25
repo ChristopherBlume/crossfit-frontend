@@ -1,7 +1,7 @@
-import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Accordion, AccordionContent, AccordionHeader, AccordionPanel } from 'primeng/accordion';
 import { Dialog } from 'primeng/dialog';
-import { FormArray, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
 import { AutoComplete } from 'primeng/autocomplete';
 import { DatePicker } from 'primeng/datepicker';
@@ -15,22 +15,24 @@ import { TimeFormatterPipe } from '../../../core/pipes/time-formatter.pipe';
 import { Workout } from '../../../core/models/workout/Workout';
 import { WorkoutExercise } from '../../../core/models/workout/WorkoutExercise';
 import { MessageService } from 'primeng/api';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
     selector: 'app-workout-detail',
-    imports: [Accordion, Dialog, ReactiveFormsModule, InputNumber, AutoComplete, DatePicker, InputText, Textarea, AccordionPanel, AccordionHeader, AccordionContent, Button, NgForOf],
+    imports: [Accordion, ReactiveFormsModule, InputNumber, AutoComplete, DatePicker, InputText, Textarea, AccordionPanel, AccordionHeader, AccordionContent, Button, NgForOf],
     templateUrl: './workout-detail.component.html',
     styleUrl: './workout-detail.component.scss'
 })
-export class WorkoutDetailComponent implements OnChanges {
-    @Input() visible = false;
-    @Input() workout: any; // The workout object to display
-    @Output() closeDialog = new EventEmitter<void>(); // Notify parent to close dialog
+export class WorkoutDetailComponent implements OnInit {
+    route = inject(ActivatedRoute);
     fb = inject(FormBuilder);
     workoutService = inject(WorkoutService);
     dataService = inject(DataService);
     messageService = inject(MessageService);
     timeFormatterPipe = inject(TimeFormatterPipe);
+
+    workout: { workout: Workout; exercises: WorkoutExercise[] } | null = null;
+
 
     workoutForm = this.fb.nonNullable.group({
         date: [{ value: '', disabled: true }], // Value is empty, and the control is disabled
@@ -41,53 +43,36 @@ export class WorkoutDetailComponent implements OnChanges {
         exercises: this.fb.array([]) // Form array for exercises, will manage disabling later
     });
 
-    ngOnChanges(changes: SimpleChanges): void {
-        this.workoutForm.disable();
-        if (changes['workout']) {
-            if (this.workout) {
+    ngOnInit(): void {
+        const workoutId = this.route.snapshot.paramMap.get('id');
+        if (!workoutId) return;
+
+        this.dataService.getWorkoutWithExercises(workoutId).subscribe((data) => {
+            if (data) {
+                this.workout = data;
                 this.populateForm();
             }
-        }
+        });
     }
 
-    hideDialog(): void {
-        this.closeDialog.emit(); // Notify parent to close the dialog
-    }
+    isEditMode = false;
 
     edit() {
-        this.workoutForm.enable(); // Enable all controls in the form
+        this.isEditMode = true;
+        this.workoutForm.enable();
     }
 
     save() {
-        if (this.workoutForm.invalid) {
-            console.error('Form is invalid. Cannot save.');
-            return;
-        }
+        if (this.workoutForm.invalid) return;
 
-        // Extract form data
-        const { workout, exercises } = this.mapFormToWorkout(); // Destructure the workout and exercises
+        const { workout, exercises } = this.mapFormToWorkout();
 
-        // Call the service to patch the workout
-        this.dataService.updateWorkout(workout, exercises).subscribe(
-            () => {
-                console.log('Workout successfully updated.');
-
-                // Update the workout in the state with both workout and exercises
-                this.workoutService.updateWorkout(workout, exercises);
-
-                // Optionally re-fetch all workouts to ensure state consistency
-                this.dataService.getWorkouts().subscribe((workouts) => {
-                    this.workoutService.workouts.set(workouts);
-                });
-
-                this.hideDialog(); // Close the dialog
-                this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workout erfolreich geändert.' });
-            },
-            (error) => {
-                console.error('Error updating workout:', error);
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Etwas ist schiefgelaufen.' });
-            }
-        );
+        this.dataService.updateWorkout(workout, exercises).subscribe(() => {
+            this.messageService.add({ severity: 'success', summary: 'Gespeichert', detail: 'Workout wurde gespeichert' });
+            this.workoutService.updateWorkout(workout, exercises);
+            this.isEditMode = false;
+            this.workoutForm.disable();
+        });
     }
 
     private mapFormToWorkout(): { workout: Workout; exercises: WorkoutExercise[] } {
@@ -106,19 +91,20 @@ export class WorkoutDetailComponent implements OnChanges {
         };
 
         const workout: Workout = {
-            id: this.workout.workout.id,
+            id: this.workout!.workout.id,
             workout_date: convertDateToBackendFormat(formValue.date), // Convert to backend format
             workout_type: formValue.workoutType,
             total_time: convertTimeToSeconds(formValue.totalTime), // Convert time to seconds
             total_rounds: formValue.totalRounds !== null ? +formValue.totalRounds : null,
             notes: formValue.notes || '',
-            user_id: this.workout.workout.user_id,
+            user_id: this.workout!.workout.user_id,
         }
 
         const exercises: WorkoutExercise[] = formValue.exercises.map((exercise: any, index: number) => ({
-            id: this.workout.exercises[index]?.id || null,
-            workout_id: this.workout.workout.id,
+            id: this.workout!.exercises[index]?.id || null,
+            workout_id: this.workout!.workout.id,
             exercise_id: exercise.exercise_id,
+            exercise_name: exercise.exercise_name,
             reps: exercise.reps !== null ? +exercise.reps : null,
             weight: exercise.weight !== null ? +exercise.weight : null,
             duration: exercise.duration !== null ? +exercise.duration : null,
@@ -137,7 +123,7 @@ export class WorkoutDetailComponent implements OnChanges {
     private populateForm(): void {
         if (this.workout) {
             const renderedDate = this.renderDateForDisplay(this.workout.workout.workout_date);
-            const formattedTime = this.timeFormatterPipe.transform(this.workout.workout.total_time, 'toTime');
+            const formattedTime = this.timeFormatterPipe.transform(this.workout.workout.total_time ?? 0, 'toTime');
             console.log("formattedTime: ", formattedTime);
             // Set top-level form controls
             this.workoutForm.patchValue({
@@ -145,7 +131,7 @@ export class WorkoutDetailComponent implements OnChanges {
                 workoutType: this.workout.workout.workout_type,
                 totalTime: formattedTime,
                 totalRounds: this.workout.workout.total_rounds,
-                notes: this.workout.workout.notes
+                notes: this.workout.workout.notes ?? ''
             });
 
             // Clear the exercises form array before repopulating
@@ -164,6 +150,7 @@ export class WorkoutDetailComponent implements OnChanges {
                         calories: [{ value: exercise.calories, disabled: true }],
                         distance: [{ value: exercise.distance, disabled: true }]
                     });
+                    console.log('Exercise group being added:', exercise);
                     exercisesArray.push(exerciseGroup);
                 }
             });
@@ -176,5 +163,17 @@ export class WorkoutDetailComponent implements OnChanges {
         return `${dateObject.getDate().toString().padStart(2, '0')}.${(dateObject.getMonth() + 1)
             .toString()
             .padStart(2, '0')}.${dateObject.getFullYear()}`;
+    }
+
+    addExerciseGroup(): void {
+        const exerciseGroup = this.fb.group({
+            exercise: [null, Validators.required],
+            reps: [null],
+            weight: [null],
+            duration: [null],
+            calories: [null],
+            distance: [null]
+        });
+        this.exercisesArray.push(exerciseGroup);
     }
 }

@@ -109,11 +109,14 @@ export class ExerciseDetailComponent implements OnChanges {
                 formattedDate: new Date(item.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }),
                 metric: item.metric
             }))
-            .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date ascending
+            .sort((a, b) => a.date.getTime() - b.date.getTime());
+        // Sort by date ascending
+        console.log('sortedProgress: ', sortedProgress);
 
         // Extract sorted labels and data
         const labels = sortedProgress.map((item) => item.formattedDate);
         const data = sortedProgress.map((item) => item.metric);
+
 
         // Calculate dynamic Y-axis max value
         this.calculateDynamicYAxisHeight(data);
