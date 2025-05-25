@@ -10,7 +10,6 @@ import { ProfileComponent } from './app/profile/profile/profile.component';
 import { authGuard } from './app/auth/service/auth.guard';
 import { ExerciseListComponent } from './app/exercise/exercise-list/exercise-list.component';
 import { WorkoutCreateComponent } from './app/workout/components/workout-create/workout-create.component';
-import { WorkoutDetailComponent } from './app/workout/components/workout-detail/workout-detail.component';
 
 export const appRoutes: Routes = [
     {
