@@ -1,6 +1,5 @@
-import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, inject, OnInit, } from '@angular/core';
 import { Accordion, AccordionContent, AccordionHeader, AccordionPanel } from 'primeng/accordion';
-import { Dialog } from 'primeng/dialog';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
 import { AutoComplete } from 'primeng/autocomplete';

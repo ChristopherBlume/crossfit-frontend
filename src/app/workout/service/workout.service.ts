@@ -1,7 +1,6 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Workout } from '../../core/models/workout/Workout';
 import { WorkoutExercise } from '../../core/models/workout/WorkoutExercise';
-import { DataService } from '../../core/services/data.service';
 
 @Injectable({
   providedIn: 'root'

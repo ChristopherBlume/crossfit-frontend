@@ -7,13 +7,11 @@ import {
 } from '@angular/forms';
 
 import { InputTextModule } from 'primeng/inputtext';
-import { WorkoutCreateComponent } from '../workout-create/workout-create.component';
 import { WorkoutService } from '../../service/workout.service';
 import { TableModule } from 'primeng/table';
 import { Ripple } from 'primeng/ripple';
 import { DataService } from '../../../core/services/data.service';
 import { DatePipe } from '@angular/common';
-import { WorkoutDetailComponent } from '../workout-detail/workout-detail.component';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { Router } from '@angular/router';

@@ -1,8 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { DataService } from '../../core/services/data.service';
 import { ExerciseService } from '../services/exercise.service';
-import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
 import { Table, TableModule } from 'primeng/table';
 import { Exercise } from '../../core/models/exercises/Exercise';
 import { ExerciseDetailComponent } from '../exercise-detail/exercise-detail.component';

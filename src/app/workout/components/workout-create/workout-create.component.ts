@@ -1,23 +1,21 @@
 import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
-import { Accordion, AccordionContent, AccordionHeader, AccordionPanel } from 'primeng/accordion';
 import {
     AbstractControl,
     FormArray,
-    FormBuilder, FormGroup,
+    FormBuilder,
     ReactiveFormsModule,
     ValidationErrors,
     ValidatorFn,
     Validators
 } from '@angular/forms';
 import { Exercise } from '../../../core/models/exercises/Exercise';
-import { Dialog } from 'primeng/dialog';
 import { DatePicker } from 'primeng/datepicker';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Button } from 'primeng/button';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Textarea } from 'primeng/textarea';
-import { JsonPipe, NgForOf, NgIf } from '@angular/common';
+import { NgForOf, NgIf } from '@angular/common';
 import { DataService } from '../../../core/services/data.service';
 import { WorkoutService } from '../../service/workout.service';
 import { ActivatedRoute, Router } from '@angular/router';
