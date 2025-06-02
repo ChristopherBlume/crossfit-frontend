@@ -1,8 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { DataService } from '../../core/services/data.service';
 import { ExerciseService } from '../services/exercise.service';
-import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
 import { Table, TableModule } from 'primeng/table';
 import { Exercise } from '../../core/models/exercises/Exercise';
 import { ExerciseDetailComponent } from '../exercise-detail/exercise-detail.component';
@@ -12,7 +10,7 @@ import { InputText } from 'primeng/inputtext';
 
 @Component({
     selector: 'app-exercise-list',
-    imports: [ButtonDirective, Ripple, TableModule, ExerciseDetailComponent, IconField, InputIcon, InputText],
+    imports: [TableModule, ExerciseDetailComponent, IconField, InputIcon, InputText],
     templateUrl: './exercise-list.component.html',
     styleUrl: './exercise-list.component.scss'
 })
@@ -31,11 +29,13 @@ export class ExerciseListComponent implements OnInit {
 
     openExerciseDetailsDialog(exercise: Exercise) {
         this.selectedExercise = exercise;
+        console.log('this.selectedExercise: ', this.selectedExercise);
         this.exerciseDialogVisible = true;
 
         // Fetch exercise progress data
         this.dataService.getProgressOverTime(exercise.id, exercise.category).subscribe(
             (result) => {
+                console.log('result:', result);
                 // Determine the best metric based on category
                 const bestMetric = result.reduce(
                     (currentBest, entry) =>
@@ -72,8 +72,6 @@ export class ExerciseListComponent implements OnInit {
         this.exerciseDialogVisible = false;
         this.selectedExercise = null; // Reset the state
     }
-
-    test() {}
 
     onGlobalFilter(table: Table, $event: Event) {
         table.filterGlobal((event?.target as HTMLInputElement).value, 'contains');

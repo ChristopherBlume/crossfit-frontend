@@ -8,6 +8,23 @@
         <p-fluid class="grid grid-cols-12 gap-8">
             <div class="col-span-12">
                 <p-chart type="line" [data]="chartData" [options]="lineOptions"></p-chart>
+                <div class="mt-4" *ngIf="exercise?.category === 'Strength'">
+                    <h4 class="mb-2">Rep Maxes</h4>
+
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div *ngFor="let reps of [1, 3, 5]">
+                            <div class="font-bold text-lg">{{ reps }}RM</div>
+                            <div *ngIf="repMaxes[reps]; else noData">
+                                <ng-container>{{repMaxes[reps]?.weight}}</ng-container>
+                                <div>{{ repMaxes[reps]?.weight }} kg</div>
+                                <small class="text-gray-500">{{ repMaxes[reps]?.date | date: 'dd.MM.yyyy' }}</small>
+                            </div>
+                            <ng-template #noData>
+                                <div class="text-gray-400 italic">–</div>
+                            </ng-template>
+                        </div>
+                    </div>
+                </div>
             </div>
         </p-fluid>
     </ng-template>

@@ -1,5 +1,5 @@
 export interface WorkoutExercise {
-    id: string,
+    id: string | null,
     workout_id: string,
     exercise_id: string
     reps: number | null;
