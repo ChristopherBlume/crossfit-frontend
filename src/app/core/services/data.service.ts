@@ -194,7 +194,10 @@ export class DataService {
 
     // Exercise progress logic
 
-    getProgressOverTime(exerciseId: string, category: string): Observable<{ metric: number | null; date: string }[]> {
+    getProgressOverTime(
+        exerciseId: string,
+        category: string
+    ): Observable<{ metric: number | null; date: string; workout_id: string; workout_type: string }[]>{
         const user = this.authService.currentUser();
         if (!user) {
             throw new Error('User not authenticated');
@@ -221,6 +224,7 @@ export class DataService {
                     workoutIdMap.set(w.id, w.workout_date);
                 }
 
+                const workoutTypeMap = new Map(userWorkouts.map(w => [w.id, w.workout_type]));
                 const workoutIds = Array.from(workoutIdMap.keys());
 
                 // Step 2: Fetch workout_exercises where exercise matches and workout_id is in the user's list
@@ -245,7 +249,11 @@ export class DataService {
                                     : category === 'Bodyweight'
                                         ? item.reps
                                         : item.duration,
-                            date: workoutIdMap.get(item.workout_id) ?? '', // map back to workout date
+                            date: workoutIdMap.get(item.workout_id) ?? '',
+                            workout_id: item.workout_id,
+                            workout_type: workoutTypeMap.get(item.workout_id) ?? '',
+                            reps: item.reps,
+                            weight: item.weight
                         }));
                     })
                 );

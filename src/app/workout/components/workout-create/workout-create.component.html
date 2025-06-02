@@ -85,11 +85,11 @@
                                         <!-- Strength / Bodyweight -->
                                         <ng-container *ngIf="['Strength', 'Bodyweight'].includes(exercise.get('exercise')?.value?.category)">
                                             <div class="grid grid-cols-2 gap-1">
-                                                <div *ngIf="isReadOnly ? exercise.value.reps !== null : true">
+                                                <div *ngIf="!isReadOnly || exercise.get('reps')?.value != null">
                                                     <label for="reps" class="block font-bold mb-1">Wiederholungen</label>
                                                     <p-inputNumber id="reps" fluid formControlName="reps" placeholder="Wiederholungen" />
                                                 </div>
-                                                <div *ngIf="isReadOnly ? exercise.value.weight !== null : true">
+                                                <div *ngIf="!isReadOnly || exercise.get('weight')?.value != null">
                                                     <label for="weight" class="block font-bold mb-1">Gewicht</label>
                                                     <p-inputNumber id="weight" fluid formControlName="weight" placeholder="Gewicht" />
                                                 </div>
@@ -98,20 +98,20 @@
                                         <!-- Cardio -->
                                         <ng-container *ngIf="exercise.get('exercise')?.value?.category === 'Cardio'">
                                             <div class="grid grid-cols-2 gap-1">
-                                                <div *ngIf="isReadOnly ? exercise.value.duration !== null : true">
-                                                    <label for="duration" class="block font-bold mb-1">Dauer</label>
-                                                    <input fluid pInputText id="duration" formControlName="duration" placeholder="Dauer (Minuten)" />
+                                                <div *ngIf="!isReadOnly || exercise.get('duration')?.value != null">
+                                                    <label class="block font-bold mb-1">Dauer</label>
+                                                    <input pInputText id="duration" formControlName="duration" placeholder="Dauer (Minuten)" />
                                                 </div>
-                                                <div *ngIf="isReadOnly ? exercise.value.reps !== null : true">
-                                                    <label for="reps-cardio" class="block font-bold mb-1">Wiederholungen</label>
+                                                <div *ngIf="!isReadOnly || exercise.get('reps')?.value != null">
+                                                    <label class="block font-bold mb-1">Wiederholungen</label>
                                                     <p-inputNumber id="reps-cardio" fluid formControlName="reps" placeholder="Wiederholungen" />
                                                 </div>
-                                                <div *ngIf="isReadOnly ? exercise.value.calories !== null : true">
-                                                    <label for="calories" class="block font-bold mb-1">Kalorien</label>
+                                                <div *ngIf="!isReadOnly || exercise.get('calories')?.value != null">
+                                                    <label class="block font-bold mb-1">Kalorien</label>
                                                     <p-inputNumber id="calories" fluid formControlName="calories" placeholder="Kalorien" />
                                                 </div>
-                                                <div *ngIf="isReadOnly ? exercise.value.distance !== null : true">
-                                                    <label for="distance" class="block font-bold mb-1">Distanz</label>
+                                                <div *ngIf="!isReadOnly || exercise.get('distance')?.value != null">
+                                                    <label class="block font-bold mb-1">Distanz</label>
                                                     <p-inputNumber id="distance" fluid formControlName="distance" placeholder="Distanz (Meter)" />
                                                 </div>
                                             </div>

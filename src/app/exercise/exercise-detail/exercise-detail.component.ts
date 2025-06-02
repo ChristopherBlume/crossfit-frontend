@@ -5,10 +5,28 @@ import { Button } from 'primeng/button';
 import { Fluid } from 'primeng/fluid';
 import { UIChart } from 'primeng/chart';
 import 'chartjs-adapter-date-fns';
+import { TooltipItem } from 'chart.js';
+import { DatePipe, NgForOf, NgIf } from '@angular/common';
+
+type ExtendedProgressPoint = {
+    date: string;
+    metric: number | null;
+    workout_id: string;
+    workout_type: string;
+    reps?: number | null;
+    weight?: number | null;
+};
+
+type ChartDataPoint = {
+    x: string;
+    y: number | null;
+    workout_type: string;
+    workout_id: string;
+};
 
 @Component({
     selector: 'app-exercise-detail',
-    imports: [Dialog, Button, Fluid, UIChart],
+    imports: [Dialog, Button, Fluid, UIChart, NgIf, NgForOf, DatePipe],
     templateUrl: './exercise-detail.component.html',
     styleUrl: './exercise-detail.component.scss'
 })
@@ -17,7 +35,7 @@ export class ExerciseDetailComponent implements OnChanges {
     @Input() exercise:
         | undefined
         | (Exercise & {
-              progress?: { metric: number | null; date: string }[];
+              progress?: ExtendedProgressPoint[];
               bestPerformance?: { metric: number | null; date: string | null };
           });
     @Output() closeDialog = new EventEmitter<void>(); // Notify parent to close dialog
@@ -30,8 +48,6 @@ export class ExerciseDetailComponent implements OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        console.log('ngOnChanges triggered', changes);
-
         if (changes['visible'] && this.visible && this.exercise?.progress) {
             this.initChartOptions(); // Ensure options are initialized
             this.prepareChartData();
@@ -41,6 +57,8 @@ export class ExerciseDetailComponent implements OnChanges {
             this.initChartOptions(); // Ensure options are initialized
             this.prepareChartData();
         }
+
+        this.calculateRepMaxes();
     }
 
     hideDialog() {
@@ -60,6 +78,17 @@ export class ExerciseDetailComponent implements OnChanges {
                 legend: {
                     labels: {
                         color: textColor
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context: TooltipItem<'line'>) => {
+                            const raw = context.raw as any;
+                            const type = raw?.workout_type ?? 'Unbekannt';
+                            const value = raw?.y ?? 'n/a';
+                            const id = raw?.workout_id ?? '';
+                            return [`Typ: ${type}`, `Wert: ${value}`, `Workout: /workouts/${id}`];
+                        }
                     }
                 }
             },
@@ -96,38 +125,39 @@ export class ExerciseDetailComponent implements OnChanges {
     }
 
     prepareChartData(): void {
-        if (!this.exercise?.progress) {
-            return;
-        }
+        if (!this.exercise?.progress) return;
 
         this.initChartOptions();
 
-        // Convert progress data into a sortable array with date objects
         const sortedProgress = this.exercise.progress
             .map((item) => ({
-                date: new Date(item.date), // Convert to Date object
-                formattedDate: new Date(item.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }),
-                metric: item.metric
+                formattedDate: new Date(item.date).toLocaleDateString('de-DE', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: '2-digit'
+                }),
+                metric: item.metric,
+                workout_type: item.workout_type,
+                workout_id: item.workout_id
             }))
-            .sort((a, b) => a.date.getTime() - b.date.getTime());
-        // Sort by date ascending
-        console.log('sortedProgress: ', sortedProgress);
+            .sort((a, b) => new Date(a.formattedDate).getTime() - new Date(b.formattedDate).getTime());
 
-        // Extract sorted labels and data
-        const labels = sortedProgress.map((item) => item.formattedDate);
-        const data = sortedProgress.map((item) => item.metric);
-
-
-        // Calculate dynamic Y-axis max value
-        this.calculateDynamicYAxisHeight(data);
+        const data: ChartDataPoint[] = sortedProgress.map((item) => ({
+            x: item.formattedDate,
+            y: item.metric,
+            workout_type: item.workout_type,
+            workout_id: item.workout_id
+        }));
 
         this.chartData = {
-            labels,
             datasets: [
                 {
-                    label: `Fortschritt`,
+                    label: 'Fortschritt',
                     data,
-                    fill: false,
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y'
+                    },
                     borderColor: '#42A5F5',
                     backgroundColor: '#42A5F5',
                     tension: 0.4,
@@ -136,13 +166,39 @@ export class ExerciseDetailComponent implements OnChanges {
                 }
             ]
         };
+
+        this.calculateDynamicYAxisHeight(data);
     }
 
-    private calculateDynamicYAxisHeight(data: (number | null)[] ): void {
-        const validData = data.filter((value): value is number => value !== null);
-        const maxValue = validData.length > 0 ? Math.max(...validData) : 0;
-        const buffer = 40; // Adjust this value as needed
+    repMaxes: { [reps: number]: { weight: number; date: string } | null } = {
+        1: null,
+        3: null,
+        5: null
+    };
+
+    calculateRepMaxes(): void {
+        if (!this.exercise?.progress) return;
+
+        const targetReps = [1, 3, 5];
+
+        for (const rep of targetReps) {
+            const matching = this.exercise.progress
+                .filter((entry) => {
+                    console.log('entry: ', entry);
+                    console.log('rep: ', rep)
+                    entry.reps === rep && entry.weight != null;
+                })
+                .sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
+
+            this.repMaxes[rep] = matching.length > 0 ? { weight: matching[0].weight!, date: matching[0].date } : null;
+        }
+    }
+
+    private calculateDynamicYAxisHeight(data: ChartDataPoint[]): void {
+        const validData = data.filter((value) => value.x != null);
+        const metricValues = validData.map((v) => v.y!);
+        const maxValue = metricValues.length > 0 ? Math.max(...metricValues) : 0;
+        const buffer = 40;
         this.lineOptions.scales.y.suggestedMax = maxValue + buffer;
     }
-
 }
