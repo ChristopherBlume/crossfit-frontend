@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Exercise } from '../../core/models/exercises/Exercise';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
@@ -6,7 +6,8 @@ import { Fluid } from 'primeng/fluid';
 import { UIChart } from 'primeng/chart';
 import 'chartjs-adapter-date-fns';
 import { TooltipItem } from 'chart.js';
-import { DatePipe, NgForOf, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
+import { DataService, RepMaxEntry } from '../../core/services/data.service';
 
 type ExtendedProgressPoint = {
     date: string;
@@ -26,7 +27,7 @@ type ChartDataPoint = {
 
 @Component({
     selector: 'app-exercise-detail',
-    imports: [Dialog, Button, Fluid, UIChart, NgIf, NgForOf, DatePipe],
+    imports: [Dialog, Button, Fluid, UIChart, NgIf],
     templateUrl: './exercise-detail.component.html',
     styleUrl: './exercise-detail.component.scss'
 })
@@ -42,6 +43,11 @@ export class ExerciseDetailComponent implements OnChanges {
 
     lineOptions: any;
     chartData: any;
+    dataService = inject(DataService);
+    oneRepMax: RepMaxEntry | null | undefined;
+    threeRepMax!: RepMaxEntry | null | undefined;
+    fiveRepMax!: RepMaxEntry | null | undefined;
+
 
     constructor() {
         this.initChartOptions();
@@ -58,7 +64,11 @@ export class ExerciseDetailComponent implements OnChanges {
             this.prepareChartData();
         }
 
-        this.calculateRepMaxes();
+        this.dataService.getTopRepMaxes(this.exercise?.name).subscribe((results) => {
+            this.oneRepMax = results[1];
+            this.threeRepMax = results[3];
+            this.fiveRepMax = results[5];
+        });
     }
 
     hideDialog() {
@@ -168,30 +178,6 @@ export class ExerciseDetailComponent implements OnChanges {
         };
 
         this.calculateDynamicYAxisHeight(data);
-    }
-
-    repMaxes: { [reps: number]: { weight: number; date: string } | null } = {
-        1: null,
-        3: null,
-        5: null
-    };
-
-    calculateRepMaxes(): void {
-        if (!this.exercise?.progress) return;
-
-        const targetReps = [1, 3, 5];
-
-        for (const rep of targetReps) {
-            const matching = this.exercise.progress
-                .filter((entry) => {
-                    console.log('entry: ', entry);
-                    console.log('rep: ', rep)
-                    entry.reps === rep && entry.weight != null;
-                })
-                .sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
-
-            this.repMaxes[rep] = matching.length > 0 ? { weight: matching[0].weight!, date: matching[0].date } : null;
-        }
     }
 
     private calculateDynamicYAxisHeight(data: ChartDataPoint[]): void {
