@@ -32,7 +32,6 @@ export class RegisterComponent {
         const rawForm = this.form.getRawValue();
         console.log('Inside Component submit: ', rawForm.email, rawForm.username, rawForm.password);
         this.authService.register(rawForm.email, rawForm.username, rawForm.password).subscribe((result) => {
-            console.log(result);
             if (result.error) {
                 this.errorMessage = result.error.message;
                 console.log(this.errorMessage);
