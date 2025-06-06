@@ -1,81 +1,56 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { Exercise } from '../../core/models/exercises/Exercise';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
-import { Fluid } from 'primeng/fluid';
 import { UIChart } from 'primeng/chart';
-import 'chartjs-adapter-date-fns';
-import { TooltipItem } from 'chart.js';
 import { NgIf } from '@angular/common';
 import { DataService, RepMaxEntry } from '../../core/services/data.service';
-
-type ExtendedProgressPoint = {
-    date: string;
-    metric: number | null;
-    workout_id: string;
-    workout_type: string;
-    reps?: number | null;
-    weight?: number | null;
-};
-
-type ChartDataPoint = {
-    x: string;
-    y: number | null;
-    workout_type: string;
-    workout_id: string;
-};
+import { ChartDataPoint } from '../../core/models/exercises/ChartDataPoint';
+import { Fluid } from 'primeng/fluid';
 
 @Component({
     selector: 'app-exercise-detail',
-    imports: [Dialog, Button, Fluid, UIChart, NgIf],
+    standalone: true,
+    imports: [Dialog, Button, UIChart, NgIf, Fluid],
     templateUrl: './exercise-detail.component.html',
     styleUrl: './exercise-detail.component.scss'
 })
 export class ExerciseDetailComponent implements OnChanges {
     @Input() visible = false;
-    @Input() exercise:
-        | undefined
-        | (Exercise & {
-              progress?: ExtendedProgressPoint[];
-              bestPerformance?: { metric: number | null; date: string | null };
-          });
-    @Output() closeDialog = new EventEmitter<void>(); // Notify parent to close dialog
+    @Input() exerciseName?: string;
+    @Output() closeDialog = new EventEmitter<void>();
 
-    lineOptions: any;
     chartData: any;
-    dataService = inject(DataService);
+    lineOptions: any;
     oneRepMax: RepMaxEntry | null | undefined;
-    threeRepMax!: RepMaxEntry | null | undefined;
-    fiveRepMax!: RepMaxEntry | null | undefined;
+    threeRepMax: RepMaxEntry | null | undefined;
+    fiveRepMax: RepMaxEntry | null | undefined;
 
+    dataService = inject(DataService);
 
     constructor() {
         this.initChartOptions();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes['visible'] && this.visible && this.exercise?.progress) {
-            this.initChartOptions(); // Ensure options are initialized
-            this.prepareChartData();
-        }
+        if ((changes['visible'] || changes['exerciseName']) && this.visible && this.exerciseName) {
+            this.initChartOptions();
+            this.dataService.getProgressForExerciseChartData(this.exerciseName).subscribe((progressData) => {
+                this.prepareChartData(progressData);
+            });
 
-        if (changes['exercise'] && this.exercise?.progress) {
-            this.initChartOptions(); // Ensure options are initialized
-            this.prepareChartData();
+            this.dataService.getTopRepMaxes(this.exerciseName).subscribe((results) => {
+                this.oneRepMax = results[1];
+                this.threeRepMax = results[3];
+                this.fiveRepMax = results[5];
+            });
         }
-
-        this.dataService.getTopRepMaxes(this.exercise?.name).subscribe((results) => {
-            this.oneRepMax = results[1];
-            this.threeRepMax = results[3];
-            this.fiveRepMax = results[5];
-        });
     }
 
     hideDialog() {
-        this.closeDialog.emit(); // Notify parent to close dialog
+        this.closeDialog.emit();
     }
 
-    initChartOptions(): void {
+    private initChartOptions(): void {
         const documentStyle = getComputedStyle(document.documentElement);
         const textColor = documentStyle.getPropertyValue('--text-color');
         const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
@@ -92,12 +67,9 @@ export class ExerciseDetailComponent implements OnChanges {
                 },
                 tooltip: {
                     callbacks: {
-                        label: (context: TooltipItem<'line'>) => {
-                            const raw = context.raw as any;
-                            const type = raw?.workout_type ?? 'Unbekannt';
-                            const value = raw?.y ?? 'n/a';
-                            const id = raw?.workout_id ?? '';
-                            return [`Typ: ${type}`, `Wert: ${value}`, `Workout: /workouts/${id}`];
+                        label: (ctx: any) => {
+                            const point = ctx.raw;
+                            return `Gewicht: ${point.y} kg • Reps: ${point.reps ?? '–'}`;
                         }
                     }
                 }
@@ -105,13 +77,6 @@ export class ExerciseDetailComponent implements OnChanges {
             scales: {
                 x: {
                     type: 'category',
-                    time: {
-                        unit: 'day',
-                        tooltipFormat: 'dd.MM.yy',
-                        displayFormats: {
-                            day: 'dd.MM.yy'
-                        }
-                    },
                     ticks: {
                         color: textColorSecondary
                     },
@@ -134,36 +99,14 @@ export class ExerciseDetailComponent implements OnChanges {
         };
     }
 
-    prepareChartData(): void {
-        if (!this.exercise?.progress) return;
-
-        this.initChartOptions();
-
-        const sortedProgress = this.exercise.progress
-            .map((item) => ({
-                formattedDate: new Date(item.date).toLocaleDateString('de-DE', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit'
-                }),
-                metric: item.metric,
-                workout_type: item.workout_type,
-                workout_id: item.workout_id
-            }))
-            .sort((a, b) => new Date(a.formattedDate).getTime() - new Date(b.formattedDate).getTime());
-
-        const data: ChartDataPoint[] = sortedProgress.map((item) => ({
-            x: item.formattedDate,
-            y: item.metric,
-            workout_type: item.workout_type,
-            workout_id: item.workout_id
-        }));
+    private prepareChartData(data: ChartDataPoint[]): void {
+        const sortedData = data.sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime());
 
         this.chartData = {
             datasets: [
                 {
                     label: 'Fortschritt',
-                    data,
+                    data: sortedData,
                     parsing: {
                         xAxisKey: 'x',
                         yAxisKey: 'y'
@@ -177,11 +120,11 @@ export class ExerciseDetailComponent implements OnChanges {
             ]
         };
 
-        this.calculateDynamicYAxisHeight(data);
+        this.calculateDynamicYAxisHeight(sortedData);
     }
 
     private calculateDynamicYAxisHeight(data: ChartDataPoint[]): void {
-        const validData = data.filter((value) => value.x != null);
+        const validData = data.filter((value) => value.y != null);
         const metricValues = validData.map((v) => v.y!);
         const maxValue = metricValues.length > 0 ? Math.max(...metricValues) : 0;
         const buffer = 40;

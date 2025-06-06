@@ -8,6 +8,7 @@ import { Database } from '../models/supabase';
 import { Workout } from '../models/workout/Workout';
 import { WorkoutExercise } from '../models/workout/WorkoutExercise';
 import { AuthService } from '../../auth/service/auth.service';
+import { ChartDataPoint } from '../models/exercises/ChartDataPoint';
 
 export type RepMaxEntry = {
     reps: number;
@@ -15,7 +16,6 @@ export type RepMaxEntry = {
     exerciseName: string;
     workoutId: string;
 };
-
 @Injectable({
     providedIn: 'root'
 })
@@ -263,6 +263,50 @@ export class DataService {
             }))
         );
     }
+
+    getProgressForExerciseChartData(exerciseName: string | undefined): Observable<ChartDataPoint[]> {
+        const user = this.authService.currentUser();
+        if (!user) {
+            throw new Error('User not authenticated');
+        }
+
+        return from(
+            this.supaBase
+                .from('workout_exercises')
+                .select(`
+        reps,
+        weight,
+        exercise:exercise_id ( id, name ),
+        workout:workout_id ( id, workout_date, user_id )
+      `)
+        ).pipe(
+            map(({ data, error }) => {
+                if (error || !data) {
+                    console.error('Fehler beim Laden des Chart-Datensatzes:', error);
+                    return [];
+                }
+
+                return data
+                    .filter(entry =>
+                        entry.exercise?.name === exerciseName &&
+                        entry.workout?.user_id === user.id &&
+                        typeof entry.weight === 'number' &&
+                        typeof entry.workout?.workout_date === 'string'
+                    )
+                    .map(entry => ({
+                        x: entry.workout!.workout_date,
+                        y: entry.weight,
+                        reps: entry.reps
+                    })) as ChartDataPoint[];
+            }),
+            catchError(err => {
+                console.error('Fehler in getProgressForExerciseChartData():', err);
+                return of([]);
+            })
+        );
+
+    }
+
 
     // Exercise progress logic
     getProgressOverTime(

@@ -24,7 +24,7 @@
 
 <app-exercise-detail
     [visible]="exerciseDialogVisible"
-    [exercise]="selectedExercise"
+    [exerciseName]="selectedExercise?.name"
     (closeDialog)="closeExerciseDialog()"
 >
 </app-exercise-detail>

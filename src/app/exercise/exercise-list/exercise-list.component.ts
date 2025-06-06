@@ -35,7 +35,6 @@ export class ExerciseListComponent implements OnInit {
         // Fetch exercise progress data
         this.dataService.getProgressOverTime(exercise.id, exercise.category).subscribe(
             (result) => {
-                console.log('result:', result);
                 // Determine the best metric based on category
                 const bestMetric = result.reduce(
                     (currentBest, entry) =>

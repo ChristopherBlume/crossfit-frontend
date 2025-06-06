@@ -77,7 +77,6 @@ export class WorkoutCreateComponent implements OnInit {
             }).subscribe(({ exercises, workout }) => {
                 this.exercises = exercises;
                 this.workout = workout;
-                console.log('exercises: ', exercises);
                 this.populateFormForReadOnlyMode();
             });
         } else {
