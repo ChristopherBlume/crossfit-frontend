@@ -208,6 +208,16 @@ export class WorkoutCreateComponent implements OnInit {
         }
     }
 
+    private toDateOnly(date: any): string | null {
+        if (date instanceof Date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+        return date;
+    }
+
     private mapWorkoutToBackendFormat(formData: any): any {
         const convertTimeToSeconds = (time: string): number | null => {
             if (!time) return null;
@@ -217,16 +227,16 @@ export class WorkoutCreateComponent implements OnInit {
 
         return {
             workout: {
-                id: formData.id, // also include workout ID for PATCH
-                workout_date: formData.date, // Format the date correctly
-                workout_type: formData.workoutType.label, // Get the label from the workout type object
+                id: formData.id,
+                workout_date: this.toDateOnly(formData.date),
+                workout_type: formData.workoutType.label,
                 total_time: convertTimeToSeconds(formData.totalTime),
                 total_rounds: formData.totalRounds || null,
                 notes: formData.notes || ''
             },
             exercises: formData.exercises.map((exercise: any) => ({
                 id: exercise.id,
-                exercise_id: exercise.exercise.id, // Ensure ID is passed
+                exercise_id: exercise.exercise.id,
                 reps: exercise.reps || null,
                 weight: exercise.weight || null,
                 duration: exercise.duration || null,
@@ -245,7 +255,7 @@ export class WorkoutCreateComponent implements OnInit {
     }
 
     private renderDateForDisplay(date: string): string {
-        const dateObject = new Date(date); // Backend format is assumed to be YYYY-MM-DD
+        const dateObject = new Date(date);
         return `${dateObject.getDate().toString().padStart(2, '0')}.${(dateObject.getMonth() + 1).toString().padStart(2, '0')}.${dateObject.getFullYear()}`;
     }
 }
